@@ -27,12 +27,19 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
+try:
+    from version import APP_NAME, REPOSITORY, __version__
+except ImportError:
+    APP_NAME = "LyricPair"
+    REPOSITORY = "ZeroOneLab/lyricpair"
+    __version__ = "unknown"
+
 API_ROOT = "https://lrclib.net/api"
-USER_AGENT = "Pebby-Lyrics/1.2 (https://github.com/ZeroOneLab/pebby-lyrics)"
+USER_AGENT = f"{APP_NAME}/{__version__} (https://github.com/{REPOSITORY})"
 QQ_API = "https://u.y.qq.com/cgi-bin/musicu.fcg"
 QQ_SMARTBOX_API = "https://c.y.qq.com/splcloud/fcgi-bin/smartbox_new.fcg"
 QQ_LYRIC_API = "https://i.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg"
-QQ_HEADERS = {"Referer": "https://y.qq.com/", "User-Agent": "Mozilla/5.0 (compatible; Pebby-Lyrics/1.2)"}
+QQ_HEADERS = {"Referer": "https://y.qq.com/", "User-Agent": f"Mozilla/5.0 (compatible; {APP_NAME}/{__version__})"}
 AUDIO_SUFFIXES = {".mp3", ".flac", ".m4a", ".ogg", ".opus", ".wav"}
 # 输出文件名格式：same 是唯一能被“按音频文件名找侧车”的播放器识别的格式。
 NAME_FORMATS = {
@@ -908,11 +915,7 @@ def secure_output() -> None:
 def main():
     secure_output()
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    try:
-        from version import __version__ as app_version
-    except ImportError:
-        app_version = "unknown"
-    parser.add_argument("--version", action="version", version=f"Pebby Lyrics {app_version}")
+    parser.add_argument("--version", action="version", version=f"{APP_NAME} {__version__}")
     parser.add_argument("root", nargs="?", type=Path, default=Path.home() / "Desktop" / "音乐", help="音乐目录或单个音频文件")
     parser.add_argument("--encoding", choices=("utf-8", "gbk"), default="utf-8", help="输出编码，默认 UTF-8 无 BOM")
     parser.add_argument("--source", choices=("auto", "qq", "lrclib"), default="auto", help="默认 QQ 优先、LRCLIB 兜底，同专辑/简繁优先级/来源/时长优先")

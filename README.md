@@ -1,10 +1,14 @@
-# Pebby Lyrics
+# LyricPair
 
-给本地音乐批量补齐同名 `.lrc` 歌词的 Windows 小工具：**QQ 音乐优先、LRCLIB 兜底**，不登录、不下载音频、不改动音乐文件本身。
+**给本地音乐批量补齐同名 `.lrc` 歌词。**
+
+Find and save matching `.lrc` lyrics for your local music library.
+
+LyricPair 是一个 Windows 工具，支持图形界面和命令行。选一首歌或一个音乐目录，它会从 QQ 音乐和 LRCLIB 查找带时间轴的歌词，默认把 `.lrc` 保存到歌曲旁边。比如 `晴天.mp3` 会配上 `晴天.lrc`。查询无需登录，音频文件只读。
+
+生成的歌词可用于支持同目录、同名 `.lrc` 的本地播放器和车机，例如 [Pebby-Player](https://github.com/ZeroOneLab/Pebby-Player)。
 
 ![界面截图](docs/screenshot.png)
-
-图形界面和命令行共用同一套实现。适合给只认“同目录同名 `.lrc`”侧车歌词的播放器、车机、开发板（比如 [Pebby-Player](https://github.com/ZeroOneLab/Pebby-Player)）准备歌词。
 
 ## 特性
 
@@ -16,19 +20,19 @@
 | 片头清理 | 可选移除 QQ 歌词开头的“歌名 - 歌手”“词曲/制作”行，默认保留 |
 | 长句拆行 | 超过设定字数拆成多条时间轴，适配小屏 |
 | 文件名格式 | 默认与音频同名；也可用标签生成“歌名 - 歌手”等命名 |
-| 拒绝覆盖 | 已有 `.lrc`（连空文件）一律跳过；写入用排他创建，失败时清理半成品 |
+| 保护已有歌词 | 默认跳过已有 `.lrc`（含空文件），可显式开启覆盖 |
 | 试跑预览 | 只查询不落盘；生成完成的歌词也能点击预览，路径按音乐目录相对显示 |
 | 编码可选 | UTF-8（默认，无 BOM）或 GBK |
 | 自带环境 | 首次运行按提示建 `.lrc-env` 隔离环境，不污染全局 Python |
-| 更新提示 | 默认关闭；手动点“检查更新”才联网 |
+| 更新提示 | 可手动检查，也可自行开启启动时检查 |
 
 ## 快速开始
 
 ### 方式一：下载 EXE（无需 Python）
 
-1. 到 [Releases](../../releases/latest) 下载 `Pebby-Lyrics.exe`
+1. 到 [最新发布页](../../releases/latest) 下载 `LyricPair.exe`
 2. 放到**可写目录**（桌面、`D:\Tools` 都行），**不要放 `C:\Program Files`**：单文件版会在 exe 同目录解压临时文件
-3. 双击运行，选音乐目录，点“开始生成”
+3. 双击运行，选择音频文件或音乐目录。批量处理时把“处理范围”设为“当前目录”或“包含子目录”，再点“开始生成”
 
 Windows Defender 或 360 偶尔会对 PyInstaller 单文件报“未知程序”，加信任即可；本项目不做任何自解压之外的系统改动。
 
@@ -37,10 +41,13 @@ Windows Defender 或 360 偶尔会对 PyInstaller 单文件报“未知程序”
 需要 Python 3.10+（Windows x64 上缺 Python 时脚本可代为安装官方版本）：
 
 ```powershell
-git clone https://github.com/ZeroOneLab/pebby-lyrics.git
-cd pebby-lyrics
+git clone https://github.com/ZeroOneLab/lyricpair.git
+cd lyricpair
 
-# 图形界面：首次会说明用途并询问是否安装 Mutagen / OpenCC
+# 首次按提示建立隔离环境并安装依赖
+.\prepare_lrc.cmd --help
+
+# 图形界面
 .\lrc_gui.cmd
 
 # 命令行：也可以把音乐目录直接拖到 prepare_lrc.cmd 上
@@ -63,7 +70,7 @@ cd pebby-lyrics
 
 其余：实时日志（显示相对音乐目录的路径，递归时不会混淆同名文件）、结果统计、保存 JSON 报告、清除日志、批量删除歌词（优先进回收站）。
 
-窗口选项自动保存到 `settings.json`：**默认就在 exe 同目录**（整个文件夹拷到 U 盘也能带着配置走），exe 所在目录不可写时回退到 `%APPDATA%\Pebby-Lyrics\settings.json`。源码运行时保存在脚本目录。
+窗口选项自动保存到 `settings.json`。程序优先写到 EXE 或源码所在目录，目录不可写时使用 `%APPDATA%\LyricPair\settings.json`。升级时可以直接沿用 EXE 旁的配置，也会读取旧版保存在用户目录里的配置。
 
 ## 首次启动
 
@@ -73,9 +80,9 @@ cd pebby-lyrics
 
 ## 试跑预览
 
-勾选“仅预览不写文件”后不会生成正式 `.lrc`，而是把结果写进 `_pebby_preview\<时间戳>\`：
+勾选“仅预览不写文件”后，结果会先写进 `_lyricpair_preview\<时间戳>\` 供你确认。
 
-- 预览目录**优先放在 exe 旁边**，避免临时文件混进音乐库；exe 目录不可写时再退到音乐目录下
+- 预览目录优先放在配置文件所在目录。该位置无法写入预览时，会尝试放到音乐目录下
 - 日志里每条结果后面有可点击的“预览文件：xxx.lrc（点击预览）”，点开是应用内查看器
 - 查看器左下角有 **“保存到歌曲目录”**：觉得这份歌词可以，直接落盘到对应歌曲同目录（覆盖前会确认）；它只是保存，不计入“成功”统计
 - 预览内容**可以直接改字**：觉得某句歌词不对，光标点进去改就行，保存的是改完的版本；保存前会检查有没有行不是 `[时间轴]`/`[元数据]` 格式，有就先提醒
@@ -149,10 +156,10 @@ cd pebby-lyrics
 
 ## 更新检查与隐私
 
-- **默认关闭**：只有手动点“检查更新”（或自己勾选“启动时检查更新”）才会请求 `api.github.com/repos/ZeroOneLab/pebby-lyrics/releases/latest`
+- **默认关闭启动时检查**。手动检查或开启启动时检查后，程序会请求 `api.github.com/repos/ZeroOneLab/lyricpair/releases/latest`
 - 勾选后每个自然日最多一次
 - 匿名 API 有 60 次/小时/IP 的配额，被限流时改读 `releases/latest` 的跳转地址取版本号
-- 请求只带 `User-Agent: Pebby-Lyrics/<版本>`，没有设备 ID、没有统计、没有遥测
+- 检查更新使用 `User-Agent: LyricPair/<版本>`，请求中没有设备 ID、统计或遥测数据
 - 发现新版本时**只在日志里给出发布页链接**（点一下复制），自己粘贴到浏览器下载即可；不弹窗、不自动打开浏览器、不自动下载或替换程序
 
 ## 常见问题
@@ -177,17 +184,20 @@ cd pebby-lyrics
 ```powershell
 # 打包（需要先跑过一次 prepare_lrc.cmd 以建立 .lrc-env）
 .\build_lrc_exe.cmd
-# 产物：build\output\Pebby-Lyrics.exe
+# 产物为 build\output\LyricPair.exe
 
 # 单元测试（不联网）
 python -m unittest discover -s tests -v
 ```
 
-发布流程：
+发布时，先更新 `version.py` 和变更记录，再提交并推送 `main` 和对应的版本标签。例如下一个版本为 `v1.12.0` 时：
 
-1. 改 `version.py` 里的 `__version__`
-2. 提交并打 tag：`git tag v1.7.1 && git push origin v1.7.1`
-3. GitHub Actions 自动构建并把 `Pebby-Lyrics.exe` 挂到 Release（tag 必须与 `version.py` 一致）
+```powershell
+git tag v1.12.0
+git push --atomic origin main v1.12.0
+```
+
+GitHub Actions 会校验版本号、构建 `LyricPair.exe`，并上传到对应的 GitHub Release。
 
 版本历史见 [CHANGELOG.md](CHANGELOG.md)。
 

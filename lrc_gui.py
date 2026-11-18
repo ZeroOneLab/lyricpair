@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Pebby Lyrics 歌词工具（图形界面）。
+"""LyricPair 歌词工具（图形界面）。
 
 依赖与命令行工具相同：Mutagen、OpenCC。源码运行：
     python lrc_gui.py
@@ -23,7 +23,7 @@ from tkinter import filedialog, messagebox, ttk
 import traceback
 
 import update_check
-from version import __version__
+from version import APP_NAME, __version__
 
 try:
     import prepare_lrc as core
@@ -32,8 +32,8 @@ except ImportError:  # 允许只拷贝 lrc_gui.py 后从任意目录运行
     import prepare_lrc as core
 
 
-APP_TITLE = "Pebby Lyrics 歌词工具"
-PREVIEW_DIR_NAME = "_pebby_preview"
+APP_TITLE = f"{APP_NAME} 歌词工具"
+PREVIEW_DIR_NAME = "_lyricpair_preview"
 FORMAT_OPTIONS = [
     (".mp3", "MP3"),
     (".wav", "WAV"),
@@ -71,11 +71,11 @@ def settings_dir() -> Path:
     else:
         first = Path(__file__).resolve().parent
     appdata = os.environ.get("APPDATA")
-    second = Path(appdata) / "Pebby-Lyrics" if appdata else Path.home() / ".pebby-lyrics"
+    second = Path(appdata) / APP_NAME if appdata else Path.home() / ".lyricpair"
     for candidate in (first, second):
         try:
             candidate.mkdir(parents=True, exist_ok=True)
-            probe = candidate / ".pebby-write-probe"
+            probe = candidate / ".lyricpair-write-probe"
             probe.write_text("", encoding="utf-8")
             probe.unlink()
         except OSError:
@@ -575,9 +575,12 @@ class LrcApp:
     # ------------------------------------------------------------
     def _load_settings(self) -> None:
         try:
-            if not self.settings_path.exists():
-                return
-            data = json.loads(self.settings_path.read_text(encoding="utf-8"))
+            path = self.settings_path
+            if not path.exists():
+                appdata = os.environ.get("APPDATA")
+                legacy_dir = Path(appdata) / "Pebby-Lyrics" if appdata else Path.home() / ".pebby-lyrics"
+                path = legacy_dir / path.name
+            data = json.loads(path.read_text(encoding="utf-8"))
             if isinstance(data.get("folder"), str):
                 self.folder_var.set(data["folder"])
             # 旧的 settings 只有 recursive 布尔值，迁移成三种处理范围
@@ -1198,7 +1201,7 @@ def _emit_line(text: str) -> None:
         try:
             root = tk.Tk()
             root.withdraw()
-            messagebox.showinfo("Pebby Lyrics", text)
+            messagebox.showinfo(APP_NAME, text)
             root.destroy()
         except tk.TclError:
             pass
@@ -1208,7 +1211,7 @@ def _cli_action() -> "int | None":
     """处理 --version / --check-update；返回 None 表示正常启动界面。"""
     args = set(sys.argv[1:])
     if args & {"--version", "-V"}:
-        _emit_line(f"Pebby Lyrics v{__version__}")
+        _emit_line(f"{APP_NAME} v{__version__}")
         return 0
     if "--check-update" in args:
         result = update_check.check()

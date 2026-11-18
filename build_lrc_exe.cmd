@@ -2,10 +2,10 @@
 setlocal
 chcp 65001 >nul
 
-rem Build lrc_gui.py into a single-file Pebby-Lyrics.exe.
+rem Build lrc_gui.py into a single-file LyricPair.exe.
 rem PyInstaller 6.16.0 runs inside the isolated env .lrc-env created by prepare_lrc.cmd.
 rem Usage: double-click, or run build_lrc_exe.cmd [--no-pause]
-rem Output: build\output\Pebby-Lyrics.exe (git-ignored; CI publishes it as a Release asset).
+rem Output: build\output\LyricPair.exe (git-ignored; CI publishes it as a Release asset).
 rem Keep this file ASCII-only: cmd.exe reads it in the OEM code page.
 
 set "ROOT=%~dp0"
@@ -30,13 +30,13 @@ if errorlevel 1 (
 )
 
 rem Read the version through a temp file: nesting quotes inside for /f is fragile.
-"%PY%" -c "from version import __version__; print(__version__)" > "%TEMP%\pebby-lyrics-version.txt" 2>nul
+"%PY%" -c "from version import __version__; print(__version__)" > "%TEMP%\lyricpair-version.txt" 2>nul
 set "VER="
-set /p VER=<"%TEMP%\pebby-lyrics-version.txt"
+set /p VER=<"%TEMP%\lyricpair-version.txt"
 if not defined VER set "VER=unknown"
 
-echo [info] building Pebby-Lyrics v%VER% ...
-"%PY%" -m PyInstaller --noconfirm --clean --onefile --windowed --name Pebby-Lyrics ^
+echo [info] building LyricPair v%VER% ...
+"%PY%" -m PyInstaller --noconfirm --clean --onefile --windowed --name LyricPair ^
     --runtime-tmpdir . ^
     --collect-data opencc ^
     --distpath "%OUT%" --workpath "%WORK%" --specpath "%WORK%" ^
@@ -46,8 +46,8 @@ if errorlevel 1 (
     goto :fail
 )
 
-for %%F in ("%OUT%\Pebby-Lyrics.exe") do set "SIZE=%%~zF"
-echo [done] %OUT%\Pebby-Lyrics.exe  (%SIZE% bytes)
+for %%F in ("%OUT%\LyricPair.exe") do set "SIZE=%%~zF"
+echo [done] %OUT%\LyricPair.exe  (%SIZE% bytes)
 echo        Tag it as v%VER% and push to let GitHub Actions publish the Release asset.
 if /i not "%~1"=="--no-pause" pause
 exit /b 0

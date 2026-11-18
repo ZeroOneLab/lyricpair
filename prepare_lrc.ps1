@@ -1,4 +1,4 @@
-param(
+﻿param(
     [Parameter(ValueFromRemainingArguments = $true)]
     [string[]]$ToolArgs = @()
 )
@@ -10,7 +10,8 @@ $env:PYTHONIOENCODING = 'utf-8'
 $env:PYTHONPATH = ''
 $EnvDir = Join-Path $PSScriptRoot '.lrc-env'
 $VenvPython = Join-Path $EnvDir 'Scripts\python.exe'
-$ManagedPython = Join-Path $env:LOCALAPPDATA 'Programs\Pebby-Lyrics\Python314\python.exe'
+$ManagedPython = Join-Path $env:LOCALAPPDATA 'Programs\LyricPair\Python314\python.exe'
+$LegacyPython = Join-Path $env:LOCALAPPDATA 'Programs\Pebby-Lyrics\Python314\python.exe'
 $Requirements = Join-Path $PSScriptRoot 'requirements-lyrics.txt'
 
 function Confirm-Install([string]$Message) {
@@ -29,14 +30,15 @@ function Test-Python($Candidate) {
 
 function Find-Python {
     # 新变量名优先，同时接受旧名，方便从旧版工具迁移。
-    $override = $env:PEBBY_LYRICS_PYTHON
+    $override = $env:LYRICPAIR_PYTHON
+    if (-not $override) { $override = $env:PEBBY_LYRICS_PYTHON }
     if (-not $override) { $override = $env:PEBBY_LRC_PYTHON }
     if ($override) {
         $candidate = @{ Path = $override; Prefix = @() }
         if (Test-Python $candidate) { return $candidate }
-        throw 'PEBBY_LYRICS_PYTHON 指定的解释器不可用，要求 Python 3.10+。'
+        throw '环境变量指定的解释器不可用，要求 Python 3.10+。'
     }
-    foreach ($path in @($VenvPython, $ManagedPython)) {
+    foreach ($path in @($VenvPython, $ManagedPython, $LegacyPython)) {
         $candidate = @{ Path = $path; Prefix = @() }
         if (Test-Python $candidate) { return $candidate }
     }
@@ -126,7 +128,7 @@ OpenCC('t2s')
 }
 
 try {
-    Write-Host '=== Pebby Lyrics 歌词工具（命令行） ==='
+    Write-Host '=== LyricPair 歌词工具（命令行） ==='
     if (-not (Test-Path -LiteralPath $Requirements -PathType Leaf) -or
         -not (Test-Path -LiteralPath (Join-Path $PSScriptRoot 'prepare_lrc.py') -PathType Leaf)) {
         throw '请把 prepare_lrc.cmd、prepare_lrc.ps1、prepare_lrc.py、requirements-lyrics.txt 放在同一个目录。'
@@ -179,7 +181,8 @@ try {
         New-Item -ItemType Directory -Path $reportDir -Force | Out-Null
         $arguments += @('--report', (Join-Path $reportDir ('lrc-' + (Get-Date -Format 'yyyyMMdd-HHmmss-fff') + '.json')))
     }
-    & $VenvPython -I -X utf8 (Join-Path $PSScriptRoot 'prepare_lrc.py') @arguments
+    # 保留脚本目录以读取相邻的 version.py，同时隔离用户站点和 Python 环境变量。
+    & $VenvPython -E -s -X utf8 (Join-Path $PSScriptRoot 'prepare_lrc.py') @arguments
     exit $LASTEXITCODE
 } catch {
     Write-Host ("错误：{0}" -f $_.Exception.Message) -ForegroundColor Red

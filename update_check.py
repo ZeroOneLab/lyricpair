@@ -19,11 +19,11 @@ import urllib.error
 import urllib.request
 from urllib.parse import unquote
 
-from version import __version__
+from version import APP_NAME, REPOSITORY, __version__
 
-REPOSITORY = "ZeroOneLab/pebby-lyrics"
 RELEASES_PAGE = f"https://github.com/{REPOSITORY}/releases/latest"
 API_LATEST = f"https://api.github.com/repos/{REPOSITORY}/releases/latest"
+USER_AGENT = f"{APP_NAME}/{__version__}"
 TIMEOUT = 6.0
 
 
@@ -62,7 +62,7 @@ def _latest_from_redirect(timeout: float) -> dict:
     """
     request = urllib.request.Request(
         RELEASES_PAGE,
-        headers={"User-Agent": f"Pebby-Lyrics/{__version__}"},
+        headers={"User-Agent": USER_AGENT},
     )
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
@@ -92,7 +92,7 @@ def fetch_latest(timeout: float = TIMEOUT) -> dict:
         API_LATEST,
         headers={
             "Accept": "application/vnd.github+json",
-            "User-Agent": f"Pebby-Lyrics/{__version__}",
+            "User-Agent": USER_AGENT,
         },
     )
     try:

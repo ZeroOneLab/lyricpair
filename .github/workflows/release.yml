@@ -43,7 +43,7 @@ jobs:
       - name: Build single-file exe
         run: >
           python -m PyInstaller --noconfirm --clean --onefile --windowed
-          --name Pebby-Lyrics --runtime-tmpdir .
+          --name LyricPair --runtime-tmpdir .
           --collect-data opencc
           --distpath dist --workpath build --specpath build
           lrc_gui.py
@@ -51,5 +51,5 @@ jobs:
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/Pebby-Lyrics.exe
+          files: dist/LyricPair.exe
           generate_release_notes: true

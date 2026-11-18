@@ -2,6 +2,11 @@
 
 日期以开题为准，版本号对应 GitHub Release 的 tag。
 
+## v1.11.0
+
+- 项目由 Pebby Lyrics 更名为 LyricPair，GitHub 仓库改为 `ZeroOneLab/lyricpair`，Windows 发布文件改为 `LyricPair.exe`
+- 图形界面、命令行和更新检查统一使用新名称，升级时可读取旧配置并继续使用旧版安装的 Python
+
 ## v1.10.1
 
 - “处理范围”默认改为“当前文件”；该选项也写进 `settings.json`，下次启动沿用（含“当前文件”）
